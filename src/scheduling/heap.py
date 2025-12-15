@@ -9,11 +9,12 @@ _REMOVED = object()
 class BinaryHeap:
     """
     Priority queue with lazy deletion.
-    Supports insert/update and extract_min.
+    Uses a hashable key (e.g., process pid) to track entries.
     """
+
     def __init__(self) -> None:
         self._heap: List[list] = []
-        self._entry_finder: Dict[Any, list] = {}
+        self._entry_finder: Dict[str, list] = {}
         self._counter: int = 0
 
     def __len__(self) -> int:
@@ -22,32 +23,34 @@ class BinaryHeap:
     def is_empty(self) -> bool:
         return len(self._entry_finder) == 0
 
-    def insert(self, item: Any, priority: Tuple[int, int, int]) -> None:
+    def insert(self, key: str, item: Any, priority: Tuple[int, int, int]) -> None:
         """
-        priority tuple example: (effective_priority, arrival_time, tie_counter)
+        Insert/update an item.
+        key: unique identifier (e.g., process pid)
+        priority: tuple for ordering
         """
-        if item in self._entry_finder:
-            self.remove(item)
-        entry = [priority, self._counter, item]
-        self._entry_finder[item] = entry
+        if key in self._entry_finder:
+            self.remove(key)
+        entry = [priority, self._counter, key, item]
+        self._entry_finder[key] = entry
         heapq.heappush(self._heap, entry)
         self._counter += 1
 
-    def remove(self, item: Any) -> None:
-        entry = self._entry_finder.pop(item)
-        entry[2] = _REMOVED
+    def remove(self, key: str) -> None:
+        entry = self._entry_finder.pop(key)
+        entry[3] = _REMOVED  # mark item removed
 
     def extract_min(self) -> Any:
         while self._heap:
-            priority, count, item = heapq.heappop(self._heap)
+            priority, count, key, item = heapq.heappop(self._heap)
             if item is not _REMOVED:
-                del self._entry_finder[item]
+                del self._entry_finder[key]
                 return item
         raise KeyError("Empty heap")
 
     def peek_min_priority(self) -> Tuple[int, int, int]:
         while self._heap:
-            priority, count, item = self._heap[0]
+            priority, count, key, item = self._heap[0]
             if item is _REMOVED:
                 heapq.heappop(self._heap)
                 continue

@@ -63,7 +63,8 @@ class PriorityAgingScheduler:
             while idx < n_total and procs[idx].arrival == clock:
                 p = procs[idx]
                 p.last_enqueued = clock
-                ready.insert(p, priority=(p.base_priority, p.arrival, 0))
+                ready.insert(p.pid, p, priority=(p.base_priority, p.arrival, 0))
+
                 idx += 1
 
             # Decide if need to pick a process
@@ -79,7 +80,7 @@ class PriorityAgingScheduler:
                 # We pop-and-reinsert if aging changed a lot; keep simple + correct.
                 cand = ready.extract_min()
                 cand_eff = eff_priority(cand, clock)
-                ready.insert(cand, priority=(cand_eff, cand.arrival, 0))
+                ready.insert(cand.pid, cand, priority=(cand_eff, cand.arrival, 0))
 
                 cur_eff = eff_priority(current, clock)
 
@@ -88,7 +89,8 @@ class PriorityAgingScheduler:
                 if top_eff < cur_eff:
                     # requeue current with updated effective priority
                     current.last_enqueued = clock
-                    ready.insert(current, priority=(cur_eff, current.arrival, 0))
+                    ready.insert(current.pid, current, priority=(cur_eff, current.arrival, 0))
+
                     current = ready.extract_min()
                     if current.start_time is None:
                         current.start_time = clock
